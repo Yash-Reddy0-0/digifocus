@@ -1,0 +1,6 @@
+# Node Modules folder
+node_modules/
+
+
+dist/
+build/
