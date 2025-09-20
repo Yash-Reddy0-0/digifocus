@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Digital Focus Guard",
+  "version": "1.0.0",
+  "description": "A fresh start for my focus extension.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "idle",
+    "alarms"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "index.html"
+  },
+  "options_page": "options.html"
+}
