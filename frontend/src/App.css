@@ -352,3 +352,51 @@ body.options-page-body, body.options-page-body > #root {
   font-size: 13px;
   color: #333;
 }
+/* --- Day-wise Chart Styles --- */
+.day-wise-chart {
+  margin-bottom: 20px;
+}
+.day-wise-chart h3 {
+  text-align: center;
+  margin: 0 0 15px 0;
+  color: #333;
+}
+/* Make the bars clickable */
+.recharts-bar-rectangle {
+  cursor: pointer;
+}
+
+/* Add this to your App.css file */
+.current-site-card {
+  background-color: #e7f3ff; /* Light blue background */
+  border: 1px solid #b3d7ff;
+  border-radius: 8px;
+  padding: 8px 16px;
+  margin-bottom: 20px;
+}
+.current-site-card h4 {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #005a9e;
+  margin: 0 0 8px 0;
+  text-align: center;
+  font-weight: 600;
+}
+/* Add this to your App.css file */
+.icon-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  padding: 5px;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 10px;
+}
+.icon-button:hover {
+  background-color: #e0e0e0;
+}

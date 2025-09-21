@@ -11,6 +11,30 @@ let activeTabInfo = {
   startTime: null,
 };
 
+
+
+// A helper to get the current date as a string (e.g., "2025-09-21")
+function getCurrentDateString() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// A function to keep only the last 7 days of data
+function pruneOldData(usageData) {
+  const savedDays = Object.keys(usageData).sort();
+  if (savedDays.length > 7) {
+    const daysToDelete = savedDays.slice(0, savedDays.length - 7);
+    daysToDelete.forEach(day => {
+      delete usageData[day];
+    });
+  }
+  return usageData;
+}
+
+
 // in background.js
 
 function getDomainFromUrl(url) {
@@ -31,20 +55,32 @@ function getDomainFromUrl(url) {
 
 function updateUsageData({ oldDomain, oldStartTime, newDomain }) {
   if (!oldDomain && !newDomain) return;
+
+  const todayStr = getCurrentDateString();
+
   chrome.storage.local.get('usageData', (result) => {
-    const usageData = result.usageData || {};
+    let usageData = result.usageData || {};
+    if (!usageData[todayStr]) {
+      usageData[todayStr] = {};
+    }
+    
+    const todayUsage = usageData[todayStr];
     const now = Date.now();
+
     if (oldDomain && oldStartTime) {
       const timeSpent = Math.round((now - oldStartTime) / 1000);
       if (timeSpent > 0) {
-        if (!usageData[oldDomain]) usageData[oldDomain] = { timeSpent: 0, visitCount: 0 };
-        usageData[oldDomain].timeSpent += timeSpent;
+        if (!todayUsage[oldDomain]) todayUsage[oldDomain] = { timeSpent: 0, visitCount: 0 };
+        todayUsage[oldDomain].timeSpent += timeSpent;
       }
     }
+
     if (newDomain && newDomain !== oldDomain) {
-      if (!usageData[newDomain]) usageData[newDomain] = { timeSpent: 0, visitCount: 0 };
-      usageData[newDomain].visitCount += 1;
+      if (!todayUsage[newDomain]) todayUsage[newDomain] = { timeSpent: 0, visitCount: 0 };
+      todayUsage[newDomain].visitCount += 1;
     }
+    
+    usageData = pruneOldData(usageData);
     chrome.storage.local.set({ usageData });
   });
 }

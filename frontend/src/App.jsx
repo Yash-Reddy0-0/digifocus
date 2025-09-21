@@ -128,8 +128,6 @@
 
 // export default App;
 
-
-
 import { useState, useEffect } from 'react';
 import './App.css';
 
@@ -145,8 +143,7 @@ function formatTime(totalSeconds) {
 }
 
 function App() {
-  const [totalTime, setTotalTime] = useState(0);
-  const [topSites, setTopSites] = useState([]);
+  const [usageData, setUsageData] = useState({});
   const [currentSite, setCurrentSite] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [blockType, setBlockType] = useState('timed');
@@ -154,34 +151,38 @@ function App() {
   const [minutes, setMinutes] = useState(30);
 
   useEffect(() => {
-    const updateDashboard = () => {
+    const updateData = () => {
+      // Get the currently active tab
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0] && tabs[0].url) {
+          try {
+            const domain = new URL(tabs[0].url).hostname.replace(/^www\./, '');
+            setCurrentSite(domain);
+          } catch (e) {}
+        }
+      });
+      // Get all usage data from storage
       chrome.storage.local.get('usageData', (result) => {
         if (result.usageData) {
-          const usageData = result.usageData;
-          const totalSeconds = Object.values(usageData).reduce((sum, site) => sum + site.timeSpent, 0);
-          setTotalTime(totalSeconds);
-          const sortedSites = Object.entries(usageData)
-            .sort(([, a], [, b]) => b.timeSpent - a.timeSpent)
-            .slice(0, 3);
-          setTopSites(sortedSites);
+          setUsageData(result.usageData);
         }
       });
     };
-    updateDashboard();
-    const intervalId = setInterval(updateDashboard, 3000);
+
+    updateData();
+    const intervalId = setInterval(updateData, 3000);
     return () => clearInterval(intervalId);
   }, []);
 
-  useEffect(() => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0] && tabs[0].url) {
-        try {
-          const domain = new URL(tabs[0].url).hostname;
-          setCurrentSite(domain);
-        } catch (e) {}
-      }
-    });
-  }, []);
+  // Calculate stats from the fetched data
+  const today=new Date().toISOString().slice(0,10);
+  const todayUsage =usageData[today] || {};
+
+  const totalTime = Object.values(todayUsage).reduce((sum, site) => sum + site.timeSpent, 0);
+  const topSites = Object.entries(todayUsage)
+    .sort(([, a], [, b]) => b.timeSpent - a.timeSpent)
+    .slice(0, 3);
+  const currentSiteData = todayUsage[currentSite] || { timeSpent: 0, visitCount: 0 };
 
   const openOptionsPage = () => {
     chrome.runtime.openOptionsPage();
@@ -211,9 +212,28 @@ function App() {
   return (
     <div className="app-container dashboard-view">
       <div className="header"><h1>Digital Focus Guard</h1></div>
+      
+      {/* 1. Total Time Spent */}
       <div className="total-time-card"><p>Total Time Today</p><h2>{formatTime(totalTime)}</h2></div>
+      
+      {/* 2. Current Site Details */}
+      {currentSite && (
+        <div className="current-site-card">
+          <h4>Currently Viewing</h4>
+          <div className="site-item">
+            <img src={`https://www.google.com/s2/favicons?domain=${currentSite}&sz=32`} alt={`${currentSite} favicon`} className="favicon" />
+            <div className="site-info">
+              <span className="domain-name">{currentSite}</span>
+              <span className="site-stats">{formatTime(currentSiteData.timeSpent)} | Visits: {currentSiteData.visitCount}</span>
+            </div>
+            <button className="icon-button" onClick={()=>setIsModalOpen(true)} title='Block this site'>🚫</button>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Top Sites */}
       <div className="top-sites-list">
-        <h3>Top Sites</h3>
+        <h3>Top Sites Today</h3>
         <ul>
           {topSites.map(([domain, data]) => (
             <li key={domain} className="site-item">
@@ -227,14 +247,20 @@ function App() {
         </ul>
       </div>
 
-      <button className="focus-mode-button" onClick={() => setIsModalOpen(true)}>Focus Mode 🎯</button>
-      <button className="full-report-button" onClick={openOptionsPage}>View Full Report</button>
+      {/* 4. Block Option Buttons */}
+ <button className="focus-mode-button" onClick={() => alert('Focus session can be started from the main dashboard.')}>
+        Start a Focus Session
+      </button>
 
+      <button className="full-report-button" onClick={openOptionsPage}>
+        View Full Report
+      </button>
+
+      {/* The Modal for Blocking */}
       {isModalOpen && (
         <div className="modal-backdrop">
           <div className="modal-content">
-            <h3>Block Current Site</h3>
-            <p className="current-site-display">{currentSite || "No site detected"}</p>
+            <h3>Block: <span className="current-site-display">{currentSite || "None"}</span></h3>
             <div className="block-type-selector">
               <label><input type="radio" name="blockType" value="timed" checked={blockType === 'timed'} onChange={() => setBlockType('timed')} /> Set Timer</label>
               <label><input type="radio" name="blockType" value="always" checked={blockType === 'always'} onChange={() => setBlockType('always')} /> Always</label>

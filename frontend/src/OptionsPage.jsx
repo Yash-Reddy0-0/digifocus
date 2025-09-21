@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import CryptoJS from 'crypto-js';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import './App.css';
 
 function formatTime(totalSeconds) {
@@ -12,6 +13,47 @@ function formatTime(totalSeconds) {
   }
   return `${minutes}m`;
 }
+
+function DayWiseChart({ dailyData, onBarClick }) {
+  const chartData = [];
+  const today = new Date();
+
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    const dateStr = date.toISOString().slice(0, 10);
+    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+
+    let totalMinutes = 0;
+    if (dailyData[dateStr]) {
+      totalMinutes = Math.round(Object.values(dailyData[dateStr]).reduce((sum, site) => sum + site.timeSpent, 0) / 60);
+    }
+    chartData.push({ name: dayName, 'Time (minutes)': totalMinutes, fullDate: dateStr });
+  }
+
+  const formatYAxis = (tickItem) => `${Math.round(tickItem / 60)}h`;
+  const handleBarClick = (data) => {
+    if (data && data.activePayload && data.activePayload[0]) {
+      onBarClick(data.activePayload[0].payload.fullDate);
+    }
+  };
+
+  return (
+    <div className="card day-wise-chart">
+      <h3>Last 7 Days Activity</h3>
+      <ResponsiveContainer width="50%" height={300}>
+        <BarChart data={chartData} onClick={handleBarClick}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis tickFormatter={formatYAxis} domain={[0, 1440]} ticks={[0, 360, 720, 1080, 1440]} />
+          <Tooltip formatter={(value) => `${value} minutes`} />
+          <Bar dataKey="Time (minutes)" fill="#8884d8" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 //violation log component
 function ViolationLog() {
   const [logs, setLogs] = useState([]);
@@ -177,15 +219,56 @@ function BlocklistManager() {
 }
 
 // --- Component 3: The Main Report Dashboard ---
+// function FullReport() {
+//   const [fullUsage, setFullUsage] = useState([]);
+
+//   useEffect(() => {
+//     const updateFullReport = () => {
+//       chrome.storage.local.get('usageData', (result) => {
+//         if (result.usageData) {
+//           const sortedData = Object.entries(result.usageData).sort(([, a], [, b]) => b.timeSpent - a.timeSpent);
+//           setFullUsage(sortedData);
+//         }
+//       });
+//     };
+//     updateFullReport();
+//     const intervalId = setInterval(updateFullReport, 3000);
+//     return () => clearInterval(intervalId);
+//   }, []);
+
+//   return (
+//     <div className="dashboard-container">
+//       <div className="sites-visited-card">
+//         <h3>Sites Visited Today</h3>
+//         <ul className="scrollable-list">
+//           {fullUsage.map(([domain, data]) => (
+//             <li key={domain} className="site-item">
+//               <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} alt={`${domain} favicon`} className="favicon" />
+//               <div className="site-info">
+//                 <span className="domain-name">{domain}</span>
+//                 <span className="site-stats">{formatTime(data.timeSpent)} | Visits: {data.visitCount}</span>
+//               </div>
+//             </li>
+//           ))}
+//         </ul>
+//       </div>
+//       <div className="main-content">
+//         <TimedBlocksManager />
+//         <BlocklistManager />
+//         <ViolationLog />
+//       </div>
+//     </div>
+//   );
+// }
 function FullReport() {
-  const [fullUsage, setFullUsage] = useState([]);
+  const [allUsageData, setAllUsageData] = useState({});
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
 
   useEffect(() => {
     const updateFullReport = () => {
       chrome.storage.local.get('usageData', (result) => {
         if (result.usageData) {
-          const sortedData = Object.entries(result.usageData).sort(([, a], [, b]) => b.timeSpent - a.timeSpent);
-          setFullUsage(sortedData);
+          setAllUsageData(result.usageData);
         }
       });
     };
@@ -194,23 +277,31 @@ function FullReport() {
     return () => clearInterval(intervalId);
   }, []);
 
+  const dailyUsage = allUsageData[selectedDate] || {};
+  const sortedData = Object.entries(dailyUsage).sort(([, a], [, b]) => b.timeSpent - a.timeSpent);
+
   return (
     <div className="dashboard-container">
       <div className="sites-visited-card">
-        <h3>Sites Visited Today</h3>
+        <h3>Sites Visited on {selectedDate}</h3>
         <ul className="scrollable-list">
-          {fullUsage.map(([domain, data]) => (
-            <li key={domain} className="site-item">
-              <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} alt={`${domain} favicon`} className="favicon" />
-              <div className="site-info">
-                <span className="domain-name">{domain}</span>
-                <span className="site-stats">{formatTime(data.timeSpent)} | Visits: {data.visitCount}</span>
-              </div>
-            </li>
-          ))}
+          {sortedData.length > 0 ? (
+            sortedData.map(([domain, data]) => (
+                <li key={domain} className="site-item">
+                <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} alt={`${domain} favicon`} className="favicon" />
+                <div className="site-info">
+                  <span className="domain-name">{domain}</span>
+                  <span className="site-stats">{formatTime(data.timeSpent)} | Visits: {data.visitCount}</span>
+                </div>
+              </li>
+            ))
+          ) : (
+            <p className="no-data">No browsing data for this day.</p>
+          )}
         </ul>
       </div>
       <div className="main-content">
+        <DayWiseChart dailyData={allUsageData} onBarClick={setSelectedDate} />
         <TimedBlocksManager />
         <BlocklistManager />
         <ViolationLog />
@@ -218,6 +309,7 @@ function FullReport() {
     </div>
   );
 }
+
 
 // --- Component 4: The Main OptionsPage with PIN Logic ---
 function OptionsPage() {
