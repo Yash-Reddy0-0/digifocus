@@ -1,7 +1,7 @@
-// You can uncomment this block temporarily whenever you want to clear all data
+// Add this block to the TOP of the file to ensure a clean start
 // chrome.runtime.onInstalled.addListener(() => {
 //   chrome.storage.local.clear(() => {
-//     console.log("✅ STORAGE CLEARED. Starting fresh.");
+//     console.log("✅ STORAGE CLEARED on install. Starting fresh.");
 //   });
 // });
 
@@ -11,10 +11,19 @@ let activeTabInfo = {
   startTime: null,
 };
 
+// in background.js
+
 function getDomainFromUrl(url) {
   if (!url) return null;
   try {
-    return new URL(url).hostname;
+    // This regex finds the main domain name, ignoring subdomains and protocols
+    const domainRegex = /^(?:https?:\/\/)?(?:[^@\n]+@)?(?:www\.)?([^:\/\n?]+)/im;
+    const matches = url.match(domainRegex);
+    if (matches && matches[1]) {
+      // We return the first captured group, which is the domain
+      return matches[1];
+    }
+    return new URL(url).hostname; // Fallback for edge cases
   } catch (e) {
     return null;
   }
@@ -55,7 +64,6 @@ function handleTabSwitch(tabId) {
 }
 
 // --- Event Listeners ---
-
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'blockSite') {
     const { domain, durationMinutes } = request;
@@ -81,6 +89,32 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       });
     });
     return true;
+  } else if (request.action === 'cancelTimedBlock') {
+    const { domain } = request;
+    chrome.storage.local.get('tempBlocklist', (result) => {
+      const blocklist = result.tempBlocklist || {};
+      if (domain in blocklist) {
+        delete blocklist[domain];
+        chrome.storage.local.set({ tempBlocklist: blocklist }, () => {
+          sendResponse({ success: true });
+        });
+      }
+    });
+    return true;
+  } else if (request.action === 'addPermanentBlock') {
+    const { domain } = request;
+    chrome.storage.local.get('permanentBlocklist', (result) => {
+      const blocklist = result.permanentBlocklist || [];
+      if (!blocklist.includes(domain)) {
+        const updatedList = [...blocklist, domain];
+        chrome.storage.local.set({ permanentBlocklist: updatedList }, () => {
+          sendResponse({ success: true });
+        });
+      } else {
+        sendResponse({ success: true });
+      }
+    });
+    return true;
   }
 });
 
@@ -89,17 +123,38 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (tab.url) {
-    const domain = getDomainFromUrl(tab.url);
-    chrome.storage.local.get('tempBlocklist', (result) => {
-      const blocklist = result.tempBlocklist || {};
-      if (domain in blocklist) {
-        if (Date.now() < blocklist[domain]) {
-          chrome.tabs.update(tabId, { url: chrome.runtime.getURL('blocked.html') });
+  if (changeInfo.status !== 'loading' && !changeInfo.url) {
+    return;
+  }
+  const domain = getDomainFromUrl(tab.url);
+  if (domain) {
+    chrome.storage.local.get(['tempBlocklist', 'permanentBlocklist', 'violationLogs'], (result) => {
+      const tempBlocklist = result.tempBlocklist || {};
+      const permanentBlocklist = result.permanentBlocklist || [];
+      let isBlocked = false;
+      if (permanentBlocklist.includes(domain)) {
+        isBlocked = true;
+      }
+      else if (domain in tempBlocklist) {
+        if (Date.now() < tempBlocklist[domain]) {
+          isBlocked = true;
         } else {
-          delete blocklist[domain];
-          chrome.storage.local.set({ tempBlocklist: blocklist });
+          delete tempBlocklist[domain];
+          chrome.storage.local.set({ tempBlocklist });
         }
+      }
+      if (isBlocked) {
+        const violationLogs = result.violationLogs || [];
+        const newLog = {
+          domain: domain,
+          timestamp: Date.now(),
+          type: 'Blocked site access attempt'
+        };
+        const updatedLogs = [newLog, ...violationLogs];
+        chrome.storage.local.set({ violationLogs: updatedLogs }, () => {
+          chrome.tabs.update(tabId, { url: chrome.runtime.getURL('blocked.html') });
+        });
+        return;
       }
     });
   }
