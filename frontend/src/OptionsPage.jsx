@@ -37,19 +37,28 @@ function DayWiseChart({ dailyData, onBarClick, selectedDate }) {
     });
   }
 
+  const maxMinutes = Math.max(...chartData.map(d => d.minutes));
+  const chartMax = maxMinutes > 0 ? maxMinutes : 60;
+
   return (
     <div className="card day-wise-chart">
       <h3>7-Day Activity Overview</h3>
       <div className="chart-container">
         {chartData.map((day, index) => {
-          const height = (day.minutes / 300) * 100; // 300 minutes = 5 hours max
           const isActive = day.fullDate === selectedDate;
           
+          // 1. Get the container's height (200px from App.css)
+          const chartHeightPx = 200; 
+
+          // 2. Calculate the bar height in *pixels*, not percent
+          const heightPx = (day.minutes / chartMax) * chartHeightPx;
+
           return (
             <div key={index} className="chart-bar">
               <div 
                 className={`chart-bar-fill ${isActive ? 'active' : ''}`}
-                style={{ height: `${Math.max(height, 10)}%` }}
+                // 3. Set the pixel height. Use 2px as the minimum for 0-minute days.
+                style={{ height: `${Math.max(heightPx, 2)}px` }}
                 onClick={() => onBarClick(day.fullDate)}
                 title={`${day.minutes} minutes`}
               />
@@ -76,7 +85,6 @@ function ViolationLog() {
     };
     
     fetchLogs();
-    // Refresh every 3 seconds to catch new violations
     const intervalId = setInterval(fetchLogs, 3000);
     return () => clearInterval(intervalId);
   }, []);
@@ -358,13 +366,29 @@ function FullReport() {
               {sortedData.length > 0 ? (
                 sortedData.map(([domain, data]) => (
                   <li key={domain} className="site-item-dashboard">
-                    <div className="site-icon-dashboard">🌐</div>
+                    {/* --- START FIX 1 --- */}
+                    {/* Removed className, using only style */}
+                    <img 
+                      src={`https://www.google.com/s2/favicons?domain=${domain}&sz=40`} 
+                      alt="favicon" 
+                      style={{ 
+                        width: '40px', 
+                        height: '40px', 
+                        borderRadius: '8px', 
+                        flexShrink: 0 
+                      }}
+                    />
+                    {/* --- END FIX 1 --- */}
+                    
+                    {/* --- START FIX 2 --- */}
+                    {/* Added back the site-info content */}
                     <div className="site-info">
                       <div className="domain-name">{domain}</div>
                       <div className="site-stats">
                         {formatTime(data.timeSpent)} • {data.visitCount} visits
                       </div>
                     </div>
+                    {/* --- END FIX 2 --- */}
                   </li>
                 ))
               ) : (
