@@ -7,84 +7,126 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
-  background-color: #f4f6f8;
-  color: #121212;
+  background-color: #f8f9fa;
+  color: #1a1a2e;
 }
 
-.card {
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.divider {
-  border: none;
-  border-top: 1px solid #e0e0e0;
-  margin: 20px 0;
+* {
+  box-sizing: border-box;
 }
 
 /* ==========================================================================
-   2. Popup Window Styles
+   2. Popup Window Styles (360px width)
    ========================================================================== */
 
 .app-container {
-  padding: 16px;
-  background-color: #f4f6f8;
+  width: 360px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 24px;
+  min-height: 500px;
+  color: #fff;
 }
 
 .dashboard-view {
-  width: 320px;
+  width: 360px;
 }
 
+/* Header */
 .header {
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
+}
+
+.header-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
 }
 
 .header h1 {
-  font-size: 18px;
+  font-size: 20px;
   margin: 0;
-  color: #333;
+  font-weight: 600;
+  color: #fff;
 }
 
+/* Total Time Card */
 .total-time-card {
-  background-color: #ffffff;
-  border-radius: 8px;
-  padding: 16px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   text-align: center;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .total-time-card p {
-  margin: 0;
+  margin: 0 0 8px 0;
   font-size: 14px;
-  color: #666;
+  opacity: 0.9;
 }
 
 .total-time-card h2 {
-  margin: 4px 0 0;
-  font-size: 32px;
-  color: #007aff;
+  margin: 0;
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  color: #fff;
 }
 
-.top-sites-list {
-  background-color: #ffffff;
+/* Current Site Card */
+.current-site-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  color: #1a1a2e;
+}
+
+.current-site-card h4 {
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 600;
+  opacity: 0.6;
+  margin: 0 0 8px 0;
+  text-align: left;
+}
+
+.current-site-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.site-icon-large {
+  width: 40px;
+  height: 40px;
+  background: #667eea;
   border-radius: 8px;
-  padding: 8px 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+/* Top Sites List */
+.top-sites-list {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .top-sites-list h3 {
-  font-size: 16px;
-  margin: 8px 0 12px;
+  font-size: 14px;
+  margin: 0 0 12px 0;
+  font-weight: 600;
+  opacity: 0.9;
 }
 
-.top-sites-list ul,
-.blocked-sites-list,
-.timed-blocks-list,
-.scrollable-list {
+.top-sites-list ul {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -93,310 +135,728 @@ body {
 .site-item {
   display: flex;
   align-items: center;
-  margin-bottom: 12px;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.site-item:last-child {
+  border-bottom: none;
+}
+
+.site-rank {
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
 }
 
 .favicon {
   width: 24px;
   height: 24px;
-  margin-right: 12px;
+  flex-shrink: 0;
 }
 
 .site-info {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  min-width: 0;
 }
 
 .domain-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .site-stats {
-  font-size: 12px;
-  color: #888;
+  font-size: 11px;
+  opacity: 0.7;
 }
 
-.focus-mode-button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 16px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #fff;
-  background-color: #28a745;
+/* Icon Button */
+.icon-button {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   border: none;
   border-radius: 8px;
+  width: 36px;
+  height: 36px;
   cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.icon-button:hover {
+  transform: scale(1.05);
+}
+
+/* Action Buttons */
+.focus-mode-button {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 14px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.focus-mode-button:hover {
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .full-report-button {
   width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  font-size: 14px;
-  font-weight: 500;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 12px;
   color: #fff;
-  background-color: #6c757d;
-  border: none;
-  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.full-report-button:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 /* ==========================================================================
-   3. Main Window (Options Page) Styles
+   3. Modal Styles
    ========================================================================== */
 
-/* --- Full Page Body & PIN Screen --- */
-body.options-page-body, body.options-page-body > #root {
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  width: 280px;
+  color: #1a1a2e;
+}
+
+.modal-content h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.current-site-display {
+  background: #f5f5f5;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #667eea;
+  text-align: center;
+  word-break: break-all;
+}
+
+.block-type-selector {
+  margin-bottom: 16px;
+}
+
+.block-type-selector label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.block-type-selector input[type="radio"] {
+  margin-right: 8px;
+}
+
+.timed-inputs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.timed-inputs input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  font-size: 14px;
+  text-align: center;
+}
+
+.add-site-button {
+  width: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: transform 0.2s;
+}
+
+.add-site-button:hover {
+  transform: translateY(-1px);
+}
+
+.add-site-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.close-modal-button {
+  width: 100%;
+  background: #f5f5f5;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  color: #666;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.close-modal-button:hover {
+  background: #e0e0e0;
+}
+
+/* ==========================================================================
+   4. Dashboard/Options Page Styles
+   ========================================================================== */
+
+body.options-page-body,
+body.options-page-body > #root {
   height: 100%;
   margin: 0;
   padding: 0;
 }
 
+/* PIN Container */
 .pin-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  background-color: #eef2f5;
   padding: 20px;
-  box-sizing: border-box;
 }
 
 .pin-card {
-  background-color: white;
-  padding: 40px;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  text-align: center;
+  background: #fff;
+  border-radius: 24px;
+  padding: 48px;
   width: 100%;
-  max-width: 380px;
-  box-sizing: border-box;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
-/* --- Dashboard Layout --- */
-.dashboard-container {
-  display: flex;
-  gap: 20px;
-  padding: 20px;
-  height: calc(100vh - 40px);
-  box-sizing: border-box;
-  background-color: #f0f2f5;
+.pin-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
 }
 
-.sites-visited-card {
-  flex: 0 0 320px;
-  background-color: #ffffff;
+.pin-card h2 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.pin-card p {
+  margin: 0 0 32px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.pin-input {
+  width: 100%;
+  padding: 16px;
+  font-size: 24px;
+  text-align: center;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  letter-spacing: 8px;
+  font-weight: bold;
+  transition: border-color 0.2s;
+}
+
+.pin-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.pin-button {
+  width: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.pin-button:hover {
+  transform: translateY(-2px);
+}
+
+.pin-error {
+  color: #d32f2f;
+  font-size: 13px;
+  margin: -8px 0 16px 0;
+}
+
+/* Dashboard Container */
+.dashboard-container {
+  min-height: 100vh;
+  background: #f8f9fa;
+}
+
+/* Dashboard Header */
+.dashboard-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 24px 32px;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dashboard-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dashboard-header-icon {
+  font-size: 32px;
+}
+
+.dashboard-header-text h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.dashboard-header-text p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.dashboard-header-right {
+  display: flex;
+  gap: 12px;
+}
+
+.settings-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  padding: 10px 20px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.settings-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Main Layout */
+.dashboard-main {
+  display: flex;
+  gap: 24px;
+  padding: 24px 32px;
+}
+
+/* Left Sidebar */
+.dashboard-sidebar {
+  width: 320px;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  gap: 16px;
+}
+
+.stats-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.stats-card-label {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.stats-card-value {
+  font-size: 40px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 16px;
+}
+
+.mini-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.mini-stat {
+  text-align: center;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.mini-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.mini-stat-label {
+  font-size: 11px;
+  color: #666;
+}
+
+/* Sites Visited Card */
+.sites-visited-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  max-height: 500px;
+  overflow: auto;
+}
+
+.sites-visited-card h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .scrollable-list {
-  overflow-y: auto;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
+.site-item-dashboard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.site-item-dashboard:hover {
+  background: #e9ecef;
+  transform: translateX(4px);
+}
+
+.site-icon-dashboard {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* Main Content Area */
 .main-content {
-  flex-grow: 1;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  overflow-y: auto; /* Allow content to scroll if it overflows */
+  gap: 16px;
 }
 
-/* ==========================================================================
-   4. Component-Specific Styles (Cards, Modals, Forms)
-   ========================================================================== */
-   
-/* --- Blocklist & Timed Block Cards --- */
-.blocklist-manager, .timed-blocks-manager {
-  margin-bottom: 0;
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.blocklist-manager h3, .timed-blocks-manager h3, .blocklist-manager h4 {
-  margin: 0 0 15px 0;
-  text-align: center;
+/* Chart Styles */
+.day-wise-chart h3 {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: 600;
 }
 
-.blocked-sites-list li, .timed-blocks-list li {
+.chart-container {
   display: flex;
+  align-items: flex-end;
   justify-content: space-between;
+  height: 200px;
+  gap: 8px;
+}
+
+.chart-bar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  padding: 10px;
+  gap: 8px;
+}
+
+.chart-bar-fill {
+  width: 100%;
+  background: #e0e0e0;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-height: 20px;
+}
+
+.chart-bar-fill.active {
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+}
+
+.chart-bar-fill:hover {
+  opacity: 0.8;
+}
+
+.chart-bar-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+}
+
+.chart-bar-label.active {
+  color: #667eea;
+}
+
+/* Two Column Grid */
+.two-column-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Active Blocks */
+.timed-blocks-manager h3,
+.blocklist-manager h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.timed-blocks-list,
+.blocked-sites-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.timed-block-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: #fff5f5;
+  border: 1px solid #ffe0e0;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.timed-block-info {
+  flex: 1;
+}
+
+.timed-block-domain {
+  font-size: 13px;
+  font-weight: 600;
+  color: #d32f2f;
+}
+
+.timed-block-time {
+  font-size: 11px;
+  color: #666;
+}
+
+.cancel-btn {
+  background: #d32f2f;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cancel-btn:hover {
+  background: #b71c1c;
+}
+
+/* Block Manager */
+.add-site-form {
+  margin-bottom: 12px;
+}
+
+.add-site-form input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  margin: 16px 0;
+}
+
+.blocklist-manager h4 {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+}
+
+.blocked-sites-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
   border-bottom: 1px solid #f0f0f0;
 }
 
-.remove-btn, .cancel-btn {
+.blocked-sites-list li:last-child {
+  border-bottom: none;
+}
+
+.blocked-sites-list li span {
+  font-size: 13px;
+}
+
+.remove-btn {
+  background: none;
   border: none;
-  background-color: transparent;
+  color: #d32f2f;
+  font-size: 18px;
   cursor: pointer;
-}
-.remove-btn { color: #e53935; font-size: 24px; }
-.cancel-btn { color: #007aff; font-size: 13px; font-weight: 500; border: 1px solid; padding: 5px 10px; border-radius: 6px; }
-
-/* --- Forms & Inputs --- */
-.add-site-form {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-.add-site-form input { flex-grow: 1; border: 1px solid #ddd; padding: 10px; border-radius: 6px; }
-
-.block-type-selector, .timed-inputs {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin: 15px 0;
-  align-items: center;
-}
-.timed-inputs input { width: 60px; text-align: center; padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
-
-.add-site-button {
-  width: 100%;
-  border: none;
-  background-color: #007aff;
-  color: white;
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
+  padding: 4px 8px;
+  transition: color 0.2s;
 }
 
-/* --- Modal --- */
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
+.remove-btn:hover {
+  color: #b71c1c;
 }
 
-.modal-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  width: 90%;
-  max-width: 300px;
-  text-align: center;
-}
-
-.current-site-display {
-  font-weight: bold;
-  color: #007aff;
-  margin: 0 0 15px 0;
-  word-break: break-all;
-}
-
-.close-modal-button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-/* --- Day-wise Chart Styles --- */
-.day-wise-chart {
-  margin-bottom: 20px;
-}
-
-.day-wise-chart h3 {
-  text-align: center;
-  margin: 0 0 15px 0;
-  color: #333;
-}
-/* --- Violation Log Styles --- */
-.violation-log {
-  margin-top: 20px;
-}
-
+/* Violation Log */
 .violation-log h3 {
-  text-align: center;
-  margin: 0 0 15px 0;
-  color: #c62828; /* Red to indicate violations */
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #d32f2f;
 }
 
 .log-item {
   display: flex;
-  flex-direction: column;
-  padding: 10px;
-  border-bottom: 1px solid #f0f0f0;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: #fff5f5;
+  border-radius: 8px;
+  margin-bottom: 8px;
 }
 
-.log-item:last-child {
-  border-bottom: none;
+.log-info {
+  flex: 1;
+}
+
+.log-domain {
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .log-details {
-  font-size: 12px;
-  color: #888;
-  margin: 4px 0;
-}
-
-.log-type {
-  font-size: 13px;
-  color: #333;
-}
-/* --- Day-wise Chart Styles --- */
-.day-wise-chart {
-  margin-bottom: 20px;
-}
-.day-wise-chart h3 {
-  text-align: center;
-  margin: 0 0 15px 0;
-  color: #333;
-}
-/* Make the bars clickable */
-.recharts-bar-rectangle {
-  cursor: pointer;
-}
-
-/* Add this to your App.css file */
-.current-site-card {
-  background-color: #e7f3ff; /* Light blue background */
-  border: 1px solid #b3d7ff;
-  border-radius: 8px;
-  padding: 8px 16px;
-  margin-bottom: 20px;
-}
-.current-site-card h4 {
   font-size: 11px;
-  text-transform: uppercase;
-  color: #005a9e;
-  margin: 0 0 8px 0;
-  text-align: center;
+  color: #666;
+  margin-top: 2px;
+}
+
+.log-badge {
+  padding: 4px 12px;
+  background: #d32f2f;
+  color: #fff;
+  font-size: 11px;
   font-weight: 600;
+  border-radius: 12px;
 }
-/* Add this to your App.css file */
-.icon-button {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 20px;
-  padding: 5px;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 10px;
-}
-.icon-button:hover {
-  background-color: #e0e0e0;
+
+.no-data {
+  text-align: center;
+  color: #999;
+  padding: 20px;
+  font-size: 14px;
 }

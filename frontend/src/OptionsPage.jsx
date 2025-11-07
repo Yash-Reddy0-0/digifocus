@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import CryptoJS from 'crypto-js';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import './App.css';
 
 function formatTime(totalSeconds) {
@@ -14,7 +13,8 @@ function formatTime(totalSeconds) {
   return `${minutes}m`;
 }
 
-function DayWiseChart({ dailyData, onBarClick }) {
+// --- Component 1: Day-Wise Chart ---
+function DayWiseChart({ dailyData, onBarClick, selectedDate }) {
   const chartData = [];
   const today = new Date();
 
@@ -26,68 +26,89 @@ function DayWiseChart({ dailyData, onBarClick }) {
 
     let totalMinutes = 0;
     if (dailyData[dateStr]) {
-      totalMinutes = Math.round(Object.values(dailyData[dateStr]).reduce((sum, site) => sum + site.timeSpent, 0) / 60);
+      totalMinutes = Math.round(
+        Object.values(dailyData[dateStr]).reduce((sum, site) => sum + site.timeSpent, 0) / 60
+      );
     }
-    chartData.push({ name: dayName, 'Time (minutes)': totalMinutes, fullDate: dateStr });
+    chartData.push({ 
+      name: dayName, 
+      minutes: totalMinutes, 
+      fullDate: dateStr 
+    });
   }
-
-  const formatYAxis = (tickItem) => `${Math.round(tickItem / 60)}h`;
-  const handleBarClick = (data) => {
-    if (data && data.activePayload && data.activePayload[0]) {
-      onBarClick(data.activePayload[0].payload.fullDate);
-    }
-  };
 
   return (
     <div className="card day-wise-chart">
-      <h3>Last 7 Days Activity</h3>
-      <ResponsiveContainer width="50%" height={300}>
-        <BarChart data={chartData} onClick={handleBarClick}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis tickFormatter={formatYAxis} domain={[0, 1440]} ticks={[0, 360, 720, 1080, 1440]} />
-          <Tooltip formatter={(value) => `${value} minutes`} />
-          <Bar dataKey="Time (minutes)" fill="#8884d8" />
-        </BarChart>
-      </ResponsiveContainer>
+      <h3>7-Day Activity Overview</h3>
+      <div className="chart-container">
+        {chartData.map((day, index) => {
+          const height = (day.minutes / 300) * 100; // 300 minutes = 5 hours max
+          const isActive = day.fullDate === selectedDate;
+          
+          return (
+            <div key={index} className="chart-bar">
+              <div 
+                className={`chart-bar-fill ${isActive ? 'active' : ''}`}
+                style={{ height: `${Math.max(height, 10)}%` }}
+                onClick={() => onBarClick(day.fullDate)}
+                title={`${day.minutes} minutes`}
+              />
+              <div className={`chart-bar-label ${isActive ? 'active' : ''}`}>
+                {day.name}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-//violation log component
+// --- Component 2: Violation Log ---
 function ViolationLog() {
   const [logs, setLogs] = useState([]);
 
   useEffect(() => {
-    chrome.storage.local.get('violationLogs', (result) => {
-      setLogs(result.violationLogs || []);
-    });
+    const fetchLogs = () => {
+      chrome.storage.local.get('violationLogs', (result) => {
+        setLogs(result.violationLogs || []);
+      });
+    };
+    
+    fetchLogs();
+    // Refresh every 3 seconds to catch new violations
+    const intervalId = setInterval(fetchLogs, 3000);
+    return () => clearInterval(intervalId);
   }, []);
 
   if (logs.length === 0) {
-    return null; // Don't show the card if there are no logs
+    return null;
   }
 
   return (
     <div className="card violation-log">
-      <h3>Violation Logs</h3>
-      <ul className="scrollable-list">
+      <h3>⚠️ Recent Violations ({logs.length})</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto' }}>
         {logs.map((log, index) => (
-          <li key={index} className="log-item">
-            <span className="domain-name">{log.domain}</span>
-            <span className="log-details">
-              {/* Format the timestamp into a readable date and time */}
-              {new Date(log.timestamp).toLocaleString()}
-            </span>
-            <span className="log-type">{log.type}</span>
-          </li>
+          <div key={index} className="log-item">
+            <div className="log-info">
+              <div className="log-domain">{log.domain}</div>
+              <div className="log-details">
+                {new Date(log.timestamp).toLocaleString()}
+              </div>
+              <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>
+                {log.type}
+              </div>
+            </div>
+            <span className="log-badge">Blocked</span>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
 
-// --- Component 1: Timed Blocks Manager ---
+// --- Component 3: Timed Blocks Manager ---
 function TimedBlocksManager() {
   const [timedBlocklist, setTimedBlocklist] = useState({});
 
@@ -106,7 +127,9 @@ function TimedBlocksManager() {
     chrome.runtime.sendMessage({ action: 'cancelTimedBlock', domain: domain });
   };
 
-  const activeBlocks = Object.entries(timedBlocklist).filter(([, endTime]) => endTime > Date.now());
+  const activeBlocks = Object.entries(timedBlocklist).filter(
+    ([, endTime]) => endTime > Date.now()
+  );
 
   if (activeBlocks.length === 0) {
     return null;
@@ -119,12 +142,17 @@ function TimedBlocksManager() {
         {activeBlocks.map(([domain, endTime]) => {
           const timeLeft = Math.round((endTime - Date.now()) / 1000);
           return (
-            <li key={domain}>
-              <div className="site-info">
-                <span className="domain-name">{domain}</span>
-                <span className="site-stats">Time left: {formatTime(timeLeft)}</span>
+            <li key={domain} className="timed-block-item">
+              <div className="timed-block-info">
+                <div className="timed-block-domain">{domain}</div>
+                <div className="timed-block-time">
+                  Time left: {formatTime(timeLeft)}
+                </div>
               </div>
-              <button onClick={() => handleCancelBlock(domain)} className="cancel-btn">
+              <button 
+                onClick={() => handleCancelBlock(domain)} 
+                className="cancel-btn"
+              >
                 Cancel
               </button>
             </li>
@@ -135,7 +163,7 @@ function TimedBlocksManager() {
   );
 }
 
-// --- Component 2: The Blocklist Manager ---
+// --- Component 4: Blocklist Manager ---
 function BlocklistManager() {
   const [permanentBlocklist, setPermanentBlocklist] = useState([]);
   const [newSite, setNewSite] = useState('');
@@ -154,6 +182,7 @@ function BlocklistManager() {
   const handleAddSite = () => {
     const siteToAdd = newSite.trim();
     if (!siteToAdd) return;
+
     if (blockType === 'always') {
       if (!permanentBlocklist.includes(siteToAdd)) {
         const updatedList = [...permanentBlocklist, siteToAdd];
@@ -163,9 +192,9 @@ function BlocklistManager() {
         });
       }
     } else {
-      const durationMinutes = (hours * 60) + minutes;
+      const durationMinutes = hours * 60 + minutes;
       if (durationMinutes <= 0) {
-        alert("Please set a duration greater than 0.");
+        alert('Please set a duration greater than 0.');
         return;
       }
       chrome.runtime.sendMessage(
@@ -181,7 +210,7 @@ function BlocklistManager() {
   };
 
   const handleRemoveSite = (siteToRemove) => {
-    const updatedList = permanentBlocklist.filter(site => site !== siteToRemove);
+    const updatedList = permanentBlocklist.filter((site) => site !== siteToRemove);
     chrome.storage.local.set({ permanentBlocklist: updatedList }, () => {
       setPermanentBlocklist(updatedList);
     });
@@ -191,26 +220,66 @@ function BlocklistManager() {
     <div className="card blocklist-manager">
       <h3>Block a Site</h3>
       <div className="add-site-form">
-        <input type="text" value={newSite} onChange={(e) => setNewSite(e.target.value)} placeholder="e.g., youtube.com" />
+        <input
+          type="text"
+          value={newSite}
+          onChange={(e) => setNewSite(e.target.value)}
+          placeholder="Enter domain (e.g., youtube.com)"
+        />
       </div>
       <div className="block-type-selector">
-        <label><input type="radio" name="blockType" value="always" checked={blockType === 'always'} onChange={() => setBlockType('always')} /> Always</label>
-        <label><input type="radio" name="blockType" value="timed" checked={blockType === 'timed'} onChange={() => setBlockType('timed')} /> Set Timer</label>
+        <label>
+          <input
+            type="radio"
+            name="blockType"
+            value="always"
+            checked={blockType === 'always'}
+            onChange={() => setBlockType('always')}
+          />
+          Block Always
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="blockType"
+            value="timed"
+            checked={blockType === 'timed'}
+            onChange={() => setBlockType('timed')}
+          />
+          Set Timer
+        </label>
       </div>
       {blockType === 'timed' && (
         <div className="timed-inputs">
-          <input type="number" min="0" value={hours} onChange={(e) => setHours(Number(e.target.value))} /> H
-          <input type="number" min="0" max="59" value={minutes} onChange={(e) => setMinutes(Number(e.target.value))} /> M
+          <input
+            type="number"
+            min="0"
+            value={hours}
+            onChange={(e) => setHours(Number(e.target.value))}
+            placeholder="Hours"
+          />
+          <input
+            type="number"
+            min="0"
+            max="59"
+            value={minutes}
+            onChange={(e) => setMinutes(Number(e.target.value))}
+            placeholder="Minutes"
+          />
         </div>
       )}
-      <button className="add-site-button" onClick={handleAddSite}>Add to Blocklist</button>
+      <button className="add-site-button" onClick={handleAddSite}>
+        Add to Blocklist
+      </button>
       <hr className="divider" />
-      <h4>Permanently Blocked Sites</h4>
+      <h4>Blocked Sites ({permanentBlocklist.length})</h4>
       <ul className="blocked-sites-list">
-        {permanentBlocklist.map(site => (
+        {permanentBlocklist.map((site) => (
           <li key={site}>
             <span>{site}</span>
-            <button onClick={() => handleRemoveSite(site)} className="remove-btn">&times;</button>
+            <button onClick={() => handleRemoveSite(site)} className="remove-btn">
+              ×
+            </button>
           </li>
         ))}
       </ul>
@@ -218,48 +287,7 @@ function BlocklistManager() {
   );
 }
 
-// --- Component 3: The Main Report Dashboard ---
-// function FullReport() {
-//   const [fullUsage, setFullUsage] = useState([]);
-
-//   useEffect(() => {
-//     const updateFullReport = () => {
-//       chrome.storage.local.get('usageData', (result) => {
-//         if (result.usageData) {
-//           const sortedData = Object.entries(result.usageData).sort(([, a], [, b]) => b.timeSpent - a.timeSpent);
-//           setFullUsage(sortedData);
-//         }
-//       });
-//     };
-//     updateFullReport();
-//     const intervalId = setInterval(updateFullReport, 3000);
-//     return () => clearInterval(intervalId);
-//   }, []);
-
-//   return (
-//     <div className="dashboard-container">
-//       <div className="sites-visited-card">
-//         <h3>Sites Visited Today</h3>
-//         <ul className="scrollable-list">
-//           {fullUsage.map(([domain, data]) => (
-//             <li key={domain} className="site-item">
-//               <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} alt={`${domain} favicon`} className="favicon" />
-//               <div className="site-info">
-//                 <span className="domain-name">{domain}</span>
-//                 <span className="site-stats">{formatTime(data.timeSpent)} | Visits: {data.visitCount}</span>
-//               </div>
-//             </li>
-//           ))}
-//         </ul>
-//       </div>
-//       <div className="main-content">
-//         <TimedBlocksManager />
-//         <BlocklistManager />
-//         <ViolationLog />
-//       </div>
-//     </div>
-//   );
-// }
+// --- Component 5: Full Report Dashboard ---
 function FullReport() {
   const [allUsageData, setAllUsageData] = useState({});
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
@@ -280,38 +308,93 @@ function FullReport() {
   const dailyUsage = allUsageData[selectedDate] || {};
   const sortedData = Object.entries(dailyUsage).sort(([, a], [, b]) => b.timeSpent - a.timeSpent);
 
+  // Calculate total stats
+  const totalTime = Object.values(dailyUsage).reduce((sum, site) => sum + site.timeSpent, 0);
+  const totalSites = Object.keys(dailyUsage).length;
+  const totalVisits = Object.values(dailyUsage).reduce((sum, site) => sum + site.visitCount, 0);
+
   return (
     <div className="dashboard-container">
-      <div className="sites-visited-card">
-        <h3>Sites Visited on {selectedDate}</h3>
-        <ul className="scrollable-list">
-          {sortedData.length > 0 ? (
-            sortedData.map(([domain, data]) => (
-                <li key={domain} className="site-item">
-                <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`} alt={`${domain} favicon`} className="favicon" />
-                <div className="site-info">
-                  <span className="domain-name">{domain}</span>
-                  <span className="site-stats">{formatTime(data.timeSpent)} | Visits: {data.visitCount}</span>
-                </div>
-              </li>
-            ))
-          ) : (
-            <p className="no-data">No browsing data for this day.</p>
-          )}
-        </ul>
+      {/* Header */}
+      <div className="dashboard-header">
+        <div className="dashboard-header-content">
+          <div className="dashboard-header-left">
+            <div className="dashboard-header-icon">🎯</div>
+            <div className="dashboard-header-text">
+              <h1>Digital Focus Guard</h1>
+              <p>Your productivity companion</p>
+            </div>
+          </div>
+          <div className="dashboard-header-right">
+            <button className="settings-button">⚙️ Settings</button>
+          </div>
+        </div>
       </div>
-      <div className="main-content">
-        <DayWiseChart dailyData={allUsageData} onBarClick={setSelectedDate} />
-        <TimedBlocksManager />
-        <BlocklistManager />
-        <ViolationLog />
+
+      {/* Main Content */}
+      <div className="dashboard-main">
+        {/* Left Sidebar */}
+        <div className="dashboard-sidebar">
+          {/* Stats Card */}
+          <div className="stats-card">
+            <div className="stats-card-label">Total on {selectedDate}</div>
+            <div className="stats-card-value">{formatTime(totalTime)}</div>
+            <div className="mini-stats">
+              <div className="mini-stat">
+                <div className="mini-stat-value">{totalSites}</div>
+                <div className="mini-stat-label">Total Sites</div>
+              </div>
+              <div className="mini-stat">
+                <div className="mini-stat-value">{totalVisits}</div>
+                <div className="mini-stat-label">Total Visits</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sites List */}
+          <div className="sites-visited-card">
+            <h3>Sites Visited on {selectedDate}</h3>
+            <ul className="scrollable-list">
+              {sortedData.length > 0 ? (
+                sortedData.map(([domain, data]) => (
+                  <li key={domain} className="site-item-dashboard">
+                    <div className="site-icon-dashboard">🌐</div>
+                    <div className="site-info">
+                      <div className="domain-name">{domain}</div>
+                      <div className="site-stats">
+                        {formatTime(data.timeSpent)} • {data.visitCount} visits
+                      </div>
+                    </div>
+                  </li>
+                ))
+              ) : (
+                <p className="no-data">No browsing data for this day.</p>
+              )}
+            </ul>
+          </div>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="main-content">
+          <DayWiseChart 
+            dailyData={allUsageData} 
+            onBarClick={setSelectedDate}
+            selectedDate={selectedDate}
+          />
+
+          <div className="two-column-grid">
+            <TimedBlocksManager />
+            <BlocklistManager />
+          </div>
+
+          <ViolationLog />
+        </div>
       </div>
     </div>
   );
 }
 
-
-// --- Component 4: The Main OptionsPage with PIN Logic ---
+// --- Component 6: PIN Authentication Screen ---
 function OptionsPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pin, setPin] = useState('');
@@ -349,6 +432,12 @@ function OptionsPage() {
     }
   };
 
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      handlePinSubmit();
+    }
+  };
+
   if (isAuthenticated) {
     return <FullReport />;
   }
@@ -356,11 +445,26 @@ function OptionsPage() {
   return (
     <div className="pin-container">
       <div className="pin-card">
-        <h2>{hasPin ? 'Enter Your PIN' : 'Set a PIN to Continue'}</h2>
-        <p>Your data is protected. A PIN is required to access the main dashboard.</p>
-        <input type="password" value={pin} onChange={(e) => setPin(e.target.value)} className="pin-input" maxLength="4" onKeyPress={(event) => { if (event.key === 'Enter') handlePinSubmit(); }} />
+        <div className="pin-icon">🔐</div>
+        <h2>{hasPin ? 'Welcome Back' : 'Set Your PIN'}</h2>
+        <p>
+          {hasPin 
+            ? 'Enter your PIN to access your dashboard' 
+            : 'Create a 4-digit PIN to protect your data'}
+        </p>
+        <input
+          type="password"
+          value={pin}
+          onChange={(e) => setPin(e.target.value)}
+          onKeyPress={handleKeyPress}
+          className="pin-input"
+          maxLength="4"
+          placeholder="••••"
+        />
         {error && <p className="pin-error">{error}</p>}
-        <button onClick={handlePinSubmit} className="pin-button">{hasPin ? 'Unlock' : 'Set PIN'}</button>
+        <button onClick={handlePinSubmit} className="pin-button">
+          {hasPin ? 'Unlock Dashboard' : 'Set PIN'}
+        </button>
       </div>
     </div>
   );

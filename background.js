@@ -11,8 +11,6 @@ let activeTabInfo = {
   startTime: null,
 };
 
-
-
 // A helper to get the current date as a string (e.g., "2025-09-21")
 function getCurrentDateString() {
   const today = new Date();
@@ -34,8 +32,21 @@ function pruneOldData(usageData) {
   return usageData;
 }
 
-
-// in background.js
+// Function to log violations
+function logViolation(domain, type = 'Blocked site access attempt') {
+  chrome.storage.local.get('violationLogs', (result) => {
+    const logs = result.violationLogs || [];
+    const newLog = {
+      domain: domain,
+      timestamp: Date.now(),
+      type: type
+    };
+    // Add new log at the beginning, keep only last 50 logs
+    const updatedLogs = [newLog, ...logs].slice(0, 50);
+    chrome.storage.local.set({ violationLogs: updatedLogs });
+    console.log('🚫 Violation logged:', domain, type);
+  });
+}
 
 function getDomainFromUrl(url) {
   if (!url) return null;
@@ -108,6 +119,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       const blocklist = result.tempBlocklist || {};
       blocklist[domain] = endTime;
       chrome.storage.local.set({ tempBlocklist: blocklist, focusSessionEndTime: endTime }, () => {
+        console.log(`✅ Timed block added: ${domain} for ${durationMinutes} minutes`);
         sendResponse({ success: true });
       });
     });
@@ -121,6 +133,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         blocklist[domain] = endTime;
       }
       chrome.storage.local.set({ tempBlocklist: blocklist, focusSessionEndTime: endTime }, () => {
+        console.log(`✅ Focus session started with ${domains.length} sites for ${durationMinutes} minutes`);
         sendResponse({ success: true });
       });
     });
@@ -132,8 +145,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (domain in blocklist) {
         delete blocklist[domain];
         chrome.storage.local.set({ tempBlocklist: blocklist }, () => {
+          console.log(`✅ Timed block cancelled: ${domain}`);
           sendResponse({ success: true });
         });
+      } else {
+        sendResponse({ success: false });
       }
     });
     return true;
@@ -144,6 +160,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (!blocklist.includes(domain)) {
         const updatedList = [...blocklist, domain];
         chrome.storage.local.set({ permanentBlocklist: updatedList }, () => {
+          console.log(`✅ Permanent block added: ${domain}`);
           sendResponse({ success: true });
         });
       } else {
@@ -164,33 +181,36 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
   const domain = getDomainFromUrl(tab.url);
   if (domain) {
-    chrome.storage.local.get(['tempBlocklist', 'permanentBlocklist', 'violationLogs'], (result) => {
+    chrome.storage.local.get(['tempBlocklist', 'permanentBlocklist'], (result) => {
       const tempBlocklist = result.tempBlocklist || {};
       const permanentBlocklist = result.permanentBlocklist || [];
       let isBlocked = false;
+      let blockType = '';
+      
+      // Check permanent blocklist
       if (permanentBlocklist.includes(domain)) {
         isBlocked = true;
+        blockType = 'Permanent block violation';
       }
+      // Check temporary blocklist
       else if (domain in tempBlocklist) {
         if (Date.now() < tempBlocklist[domain]) {
           isBlocked = true;
+          blockType = 'Timed block violation';
         } else {
+          // Block expired, remove it
           delete tempBlocklist[domain];
           chrome.storage.local.set({ tempBlocklist });
         }
       }
+      
       if (isBlocked) {
-        const violationLogs = result.violationLogs || [];
-        const newLog = {
-          domain: domain,
-          timestamp: Date.now(),
-          type: 'Blocked site access attempt'
-        };
-        const updatedLogs = [newLog, ...violationLogs];
-        chrome.storage.local.set({ violationLogs: updatedLogs }, () => {
-          chrome.tabs.update(tabId, { url: chrome.runtime.getURL('blocked.html') });
-        });
-        return;
+        // Log the violation
+        logViolation(domain, blockType);
+        
+        // Redirect to blocked page
+        chrome.tabs.update(tabId, { url: chrome.runtime.getURL('blocked.html') });
+        console.log(`🚫 Blocked access to: ${domain} (${blockType})`);
       }
     });
   }
@@ -207,8 +227,10 @@ chrome.idle.onStateChanged.addListener((newState) => {
   });
   if (newState === 'idle' || newState === 'locked') {
     activeTabInfo.startTime = null;
+    console.log('⏸️ User idle/locked - pausing tracking');
   } else if (newState === 'active') {
     activeTabInfo.startTime = Date.now();
+    console.log('▶️ User active - resuming tracking');
   }
 });
 
@@ -225,3 +247,6 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     }
   }
 });
+
+// Log when extension starts
+console.log('🎯 Digital Focus Guard started');

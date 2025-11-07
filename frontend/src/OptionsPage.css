@@ -1,0 +1,57 @@
+:root {
+  --primary: #007aff;
+  --bg: #f5f7fb;
+  --card-bg: #ffffff;
+  --shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+body {
+  background: var(--bg);
+  color: #222;
+}
+
+/* Card polish */
+.card {
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
+  border-radius: 14px;
+  transition: transform .15s ease;
+}
+.card:hover { transform: scale(1.01); }
+
+/* Chart improvements */
+.recharts-wrapper { background: #fff; border-radius: 10px; padding: 8px; }
+.recharts-bar-rectangle:hover { fill: #005adf !important; }
+
+/* Better scroll look */
+.scrollable-list {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+}
+
+/* PIN Screen tweak */
+.pin-card {
+  border: 1px solid #e2e8f0;
+  background: linear-gradient(135deg,#fff,#f9fafb);
+}
+
+/* Modern buttons */
+.add-site-button, .cancel-btn {
+  transition: background .2s;
+}
+.add-site-button:hover { background:#005adf; }
+.cancel-btn:hover { background:#e8f3ff; }
+
+/* Dashboard layout polish */
+.dashboard-container {
+  background: var(--bg);
+  padding: 20px;
+  border-radius: 12px;
+}
+
+/* Violation Log accent */
+.violation-log h3 { color:#e53935; font-weight:600; }
+
+/* Chart text tone */
+.day-wise-chart h3 { color:#222; font-weight:600; }
